@@ -1,11 +1,10 @@
-import fs from "fs";
-import path from "path";
+import * as path from "@std/path";
 
 type Point = { x: number; y: number; z?: number };
 
 function readData(fileName: string, day: string) {
-	const file = path.resolve(__dirname, `../${day}/${fileName}.txt`);
-	return fs.readFileSync(file, "utf8");
+	const file = path.resolve(Deno.cwd(), `../${day}/${fileName}.txt`);
+	return Deno.readTextFileSync(file);
 }
 function gcd(a: number, b: number): number {
 	return b === 0 ? a : gcd(b, a % b);
@@ -31,7 +30,6 @@ function derangement(n: number): number {
 			return (n - 1) * derangement(n - 1) + derangement(n - 2);
 	}
 }
-
 function generatePermutations<T>(inputArray: T[]): T[][] {
 	const result: Set<string> = new Set();
 

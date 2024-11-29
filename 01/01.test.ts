@@ -11,7 +11,7 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 			expect(solveA("example_a", currentDay)).toBe(0);
 		});
 
-		it("Solution", () => {
+		it.ignore("Solution", () => {
 			expect(solveA("input", currentDay)).toBe(0);
 		});
 	});
@@ -21,7 +21,7 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 			expect(solveB("example_b", currentDay)).toBe(0);
 		});
 
-		it("Solution", () => {
+		it.ignore("Solution", () => {
 			expect(solveB("input", currentDay)).toBe(0);
 		});
 	});
