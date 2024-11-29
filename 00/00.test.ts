@@ -1,27 +1,28 @@
-import path from "path";
-import { expect, test, describe } from "vitest";
-import { solveA, solveB } from "./00";
+import * as path from "@std/path";
+import { expect } from "@std/expect";
+import { describe, it } from "jsr:@std/testing/bdd";
+import { solveA, solveB } from "./00.ts";
 
-const currentDay = path.basename(__dirname);
+const currentDay = path.basename(Deno.cwd());
 
 describe(`AOC 2024 - Day ${currentDay}`, () => {
 	describe("Part A", () => {
-		test("Example", () => {
-			expect(solveA("example_a", currentDay)).toBe(null);
+		it("Example", () => {
+			expect(solveA("example_a", currentDay)).toBe(0);
 		});
 
-		test("Solution", () => {
-			expect(solveA("input", currentDay)).toBe(null);
+		it("Solution", () => {
+			expect(solveA("input", currentDay)).toBe(0);
 		});
 	});
 
 	describe("Part B", () => {
-		test("Example", () => {
-			expect(solveB("example_b", currentDay)).toBe(null);
+		it("Example", () => {
+			expect(solveB("example_b", currentDay)).toBe(0);
 		});
 
-		test("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(null);
+		it("Solution", () => {
+			expect(solveB("input", currentDay)).toBe(0);
 		});
 	});
 });
