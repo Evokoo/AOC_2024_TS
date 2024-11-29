@@ -1,5 +1,5 @@
-## Advent of Code 2021
+## Advent of Code 2024
 
-**Link**: [Advent of Code 2021](https://adventofcode.com/2021)
+**Link**: [Advent of Code 2024](https://adventofcode.com/2024)
 
 **Langauge**: Typescript
