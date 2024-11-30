@@ -1,5 +1,5 @@
 // Imports
-import TOOLS from "../00/tools.ts";
+import TOOLS from "tools";
 
 //Solutions
 export function solveA(fileName: string, day: string): number {
