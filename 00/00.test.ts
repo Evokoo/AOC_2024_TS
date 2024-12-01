@@ -1,6 +1,6 @@
 import * as path from "@std/path";
 import { expect } from "@std/expect";
-import { describe, it } from "jsr:@std/testing/bdd";
+import { describe, it } from "@std/testing/bdd";
 import { solveA, solveB } from "./00.ts";
 
 const currentDay = path.basename(Deno.cwd());
