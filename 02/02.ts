@@ -5,12 +5,14 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const reports = parseReports(data);
-	return checkReports(reports);
+	const safeReports = findSafeReports(reports);
+	return safeReports.size;
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const reports = parseReports(data);
-	return checkReports(reports, true);
+	const safeReports = findSafeReports(reports, true);
+	return safeReports.size;
 }
 
 //Run
@@ -25,34 +27,50 @@ function parseReports(input: string): number[][] {
 	return reports;
 }
 
-function checkReports(reports: number[][], partB: boolean = false): number {
-	let validReports = 0;
+function findSafeReports(
+	reports: number[][],
+	problemDampener: boolean = false
+): Set<number> {
+	const safeReports: Set<number> = new Set();
 
-	for (const report of reports) {
-		if (report[0] == report[1]) continue;
-
-		const decrease = report[0] > report[1];
-		let valid = true;
-
-		for (let i = 1; i < report.length; i++) {
-			const a = report[i - 1];
-			const b = report[i];
-
-			if (
-				(decrease && a - b < 0) ||
-				(!decrease && a - b > 0) ||
-				a - b == 0 ||
-				Math.abs(a - b) > 3
-			) {
-				valid = false;
-				break;
-			}
-		}
-
-		if (valid) {
-			validReports++;
+	for (const [ID, report] of reports.entries()) {
+		if (
+			isSafeReport(report) ||
+			(problemDampener && runProblemDampener(report))
+		) {
+			safeReports.add(ID);
 		}
 	}
 
-	return validReports;
+	return safeReports;
+}
+
+function isSafeReport(report: number[]): boolean {
+	for (let i = 1, currentDirection = undefined; i < report.length; i++) {
+		const reportA = report[i - 1];
+		const reportB = report[i];
+		const difference = reportA - reportB;
+		const direction = difference > 0 ? -1 : 1;
+
+		if (difference === 0 || Math.abs(difference) > 3) {
+			return false;
+		}
+
+		if (!currentDirection) {
+			currentDirection = direction;
+		} else {
+			if (currentDirection !== direction) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function runProblemDampener(report: number[]): boolean {
+	for (let i = 0; i < report.length; i++) {
+		const modifiedReport = [...report.slice(0, i), ...report.slice(i + 1)];
+		if (isSafeReport(modifiedReport)) return true;
+	}
+	return false;
 }
