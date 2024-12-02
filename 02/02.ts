@@ -15,9 +15,6 @@ export function solveB(fileName: string, day: string): number {
 	return safeReports.size;
 }
 
-//Run
-// solveA("example_a", "02");
-
 // Functions
 function parseReports(input: string): number[][] {
 	const reports = input
