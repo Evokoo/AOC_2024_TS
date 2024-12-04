@@ -11,4 +11,6 @@ export function solveB(fileName: string, day: string): number {
 	return 0;
 }
 
+//Run
+
 // Functions
