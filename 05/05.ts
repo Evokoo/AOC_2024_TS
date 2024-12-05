@@ -17,10 +17,7 @@ export function solveB(fileName: string, day: string): number {
 }
 
 // Types and Interface
-type Rules = {
-	before: Map<number, Set<number>>;
-	after: Map<number, Set<number>>;
-};
+type Rules = Map<number, Set<number>>;
 type Orders = number[][];
 
 interface PrintData {
@@ -31,14 +28,13 @@ interface PrintData {
 // Functions
 function parseInput(data: string): PrintData {
 	const lines = data.split("\n").filter((line) => line);
-	const rules: Rules = { before: new Map(), after: new Map() };
+	const rules: Rules = new Map();
 	const orders: Orders = [];
 
 	for (const line of lines) {
 		if (line.includes("|")) {
 			const [x, y] = line.split("|").map(Number);
-			rules.before.set(x, (rules.before.get(x) ?? new Set()).add(y));
-			rules.after.set(y, (rules.after.get(y) ?? new Set()).add(x));
+			rules.set(x, (rules.get(x) ?? new Set()).add(y));
 		} else {
 			const pages = line.split(",").map(Number);
 			orders.push(pages);
@@ -63,7 +59,7 @@ function validatePrintOrders({ rules, orders }: PrintData): {
 			for (let j = i + 1; j < order.length; j++) {
 				const nextPage = order[j];
 
-				const validPages = rules.before.get(currentPage);
+				const validPages = rules.get(currentPage);
 				if (validPages?.has(nextPage)) continue;
 
 				isValid = false;
@@ -90,7 +86,7 @@ function fixOrders(invalidOrders: Orders, { rules }: PrintData): Orders {
 		do {
 			swapped = false;
 			for (let i = 0; i < n - 1; i++) {
-				if (rules.before.get(order[i + 1])?.has(order[i])) {
+				if (rules.get(order[i + 1])?.has(order[i])) {
 					[order[i], order[i + 1]] = [order[i + 1], order[i]];
 					swapped = true;
 				}
