@@ -8,21 +8,21 @@ const currentDay = path.basename(Deno.cwd());
 describe(`AOC 2024 - Day ${currentDay}`, () => {
 	describe("Part A", () => {
 		it("Example", () => {
-			expect(solveA("example_a", currentDay)).toBe(0);
+			expect(solveA("example_a", currentDay)).toBe(143);
 		});
 
-		it.ignore("Solution", () => {
-			expect(solveA("input", currentDay)).toBe(0);
+		it("Solution", () => {
+			expect(solveA("input", currentDay)).toBe(4569);
 		});
 	});
 
-	describe.ignore("Part B", () => {
+	describe("Part B", () => {
 		it("Example", () => {
-			expect(solveB("example_b", currentDay)).toBe(0);
+			expect(solveB("example_b", currentDay)).toBe(123);
 		});
 
-		it.ignore("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(0);
+		it("Solution", () => {
+			expect(solveB("input", currentDay)).toBe(6456);
 		});
 	});
 });
