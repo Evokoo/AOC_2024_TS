@@ -56,7 +56,7 @@ function parseInput(input: string): Lab {
 	throw Error("Guard not found!");
 }
 function getGuardPath({ grid, guard }: Lab): Set<string> {
-	const turns: Map<string, number> = new Map();
+	const turns: Set<string> = new Set();
 
 	while (true) {
 		const nextCoord = { x: guard.x, y: guard.y };
@@ -80,10 +80,10 @@ function getGuardPath({ grid, guard }: Lab): Set<string> {
 			const coord = parseCoordinate(nextCoord.x, nextCoord.y);
 
 			if (grid[nextCoord.y][nextCoord.x] === "#") {
-				if ((turns.get(coord) ?? -1) === guard.bearing) {
+				if (turns.has(`${coord}-${guard.bearing}`)) {
 					return new Set<string>();
 				} else {
-					turns.set(coord, guard.bearing);
+					turns.add(`${coord}-${guard.bearing}`);
 					guard.bearing = (guard.bearing + 90) % 360;
 				}
 			} else {
