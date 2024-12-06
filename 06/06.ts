@@ -24,7 +24,7 @@ type Grid = string[][];
 interface Guard {
 	x: number;
 	y: number;
-	path: Map<string, number>;
+	path: Set<string>;
 	bearing: number;
 }
 interface Lab {
@@ -36,7 +36,6 @@ interface Lab {
 function parseCoordinate(x: number, y: number): string {
 	return `${x},${y}`;
 }
-
 function parseInput(input: string): Lab {
 	const grid: Grid = input.split("\n").map((row) => [...row]);
 
@@ -46,7 +45,7 @@ function parseInput(input: string): Lab {
 				const guard = {
 					x,
 					y,
-					path: new Map([[parseCoordinate(x, y), 0]]),
+					path: new Set([parseCoordinate(x, y)]),
 					bearing: 0,
 				};
 				return { grid, guard };
@@ -56,8 +55,9 @@ function parseInput(input: string): Lab {
 
 	throw Error("Guard not found!");
 }
+function getGuardPath({ grid, guard }: Lab): Set<string> {
+	const turns: Map<string, number> = new Map();
 
-function getGuardPath({ grid, guard }: Lab): Map<string, number> {
 	while (true) {
 		const nextCoord = { x: guard.x, y: guard.y };
 
@@ -77,20 +77,19 @@ function getGuardPath({ grid, guard }: Lab): Map<string, number> {
 		}
 
 		if (grid[nextCoord.y] && grid[nextCoord.y][nextCoord.x]) {
+			const coord = parseCoordinate(nextCoord.x, nextCoord.y);
+
 			if (grid[nextCoord.y][nextCoord.x] === "#") {
-				guard.bearing = (guard.bearing + 90) % 360;
+				if ((turns.get(coord) ?? -1) === guard.bearing) {
+					return new Set<string>();
+				} else {
+					turns.set(coord, guard.bearing);
+					guard.bearing = (guard.bearing + 90) % 360;
+				}
 			} else {
 				guard.x = nextCoord.x;
 				guard.y = nextCoord.y;
-
-				const coord = parseCoordinate(nextCoord.x, nextCoord.y);
-				const coordCount = (guard.path.get(coord) ?? 0) + 1;
-
-				if (coordCount >= 5) {
-					return new Map<string, number>();
-				} else {
-					guard.path.set(coord, coordCount);
-				}
+				guard.path.add(coord);
 			}
 		} else {
 			break;
@@ -99,25 +98,20 @@ function getGuardPath({ grid, guard }: Lab): Map<string, number> {
 
 	return guard.path;
 }
-
-function alterGuardPath(
-	{ grid, guard }: Lab,
-	guardPath: Map<string, number>
-): number {
+function alterGuardPath({ grid, guard }: Lab, guardPath: Set<string>): number {
 	let infiniteLoops = 0;
 
-	for (const [point, _] of [...guardPath]) {
-		const gridClone = structuredClone(grid);
-		const guardClone = structuredClone(guard);
+	for (const point of [...guardPath]) {
 		const [x, y] = point.split(",").map(Number);
+		grid[y][x] = "#";
 
-		gridClone[y][x] = "#";
-
-		const path = getGuardPath({ grid: gridClone, guard: guardClone });
+		const path = getGuardPath({ grid, guard: structuredClone(guard) });
 
 		if (path.size === 0) {
 			infiniteLoops++;
 		}
+
+		grid[y][x] = ".";
 	}
 
 	return infiniteLoops;
