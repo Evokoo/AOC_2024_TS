@@ -13,20 +13,17 @@ export function solveB(fileName: string, day: string): number {
 	return countAntiNodes(grid);
 }
 
-type Antennas = Map<string, Set<string>>;
 type Point = { x: number; y: number };
 
 interface Grid {
 	grid: string[][];
-	antennas: Antennas;
-	occupied: Set<string>;
+	antennas: Map<string, Set<string>>;
 }
 
 // Functions
 function parseInput(data: string): Grid {
 	const grid: string[][] = data.split("\n").map((row) => [...row]);
-	const antennas: Antennas = new Map();
-	const occupied: Set<string> = new Set();
+	const antennas: Map<string, Set<string>> = new Map();
 
 	for (let y = 0; y < grid.length; y++) {
 		for (let x = 0; x < grid[0].length; x++) {
@@ -34,17 +31,16 @@ function parseInput(data: string): Grid {
 
 			if (currentCoord !== ".") {
 				const coordCode = coordToString(x, y);
-				const currentPoints = antennas.get(currentCoord) ?? new Set();
-
-				currentPoints.add(coordCode);
-				occupied.add(coordCode);
-
+				const currentPoints = new Set([
+					...(antennas.get(currentCoord) ?? new Set()),
+					coordCode,
+				]);
 				antennas.set(currentCoord, currentPoints);
 			}
 		}
 	}
 
-	return { grid, antennas, occupied };
+	return { grid, antennas };
 }
 function coordToString(x: number, y: number): string {
 	return `${x},${y}`;
