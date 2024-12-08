@@ -5,14 +5,12 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const grid: Grid = parseInput(data);
-	const anitNodes: Point[] = findAntiNodes(grid, true);
-	return anitNodes.length;
+	return countAntiNodes(grid, true);
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const grid: Grid = parseInput(data);
-	const anitNodes: Point[] = findAntiNodes(grid);
-	return anitNodes.length;
+	return countAntiNodes(grid);
 }
 
 type Antennas = Map<string, Set<string>>;
@@ -55,49 +53,44 @@ function coordToPoint(coord: string): Point {
 	const [x, y] = coord.split(",").map(Number);
 	return { x, y };
 }
-
-function generateLineWithinLimits(
+function extrapolatePoints(
 	A: Point,
 	B: Point,
-	xMin: number,
-	xMax: number,
-	yMin: number,
-	yMax: number
+	max: Point,
+	min: Point = { x: 0, y: 0 }
 ): Point[] {
 	const points: Point[] = [];
-	const slope = A.x === B.x ? null : (B.y - A.y) / (B.x - A.x);
+	const slope = (B.y - A.y) / (B.x - A.x);
+	const step = B.x > A.x ? 1 : -1;
 
-	if (slope === null) {
-		// Vertical Line
-		const step = B.y > A.y ? 1 : -1;
-		for (let y = A.y; y >= yMin && y <= yMax; y += step) {
-			points.push({ x: A.x, y });
-		}
-	} else {
-		// Regular line
-		const step = B.x > A.x ? 1 : -1;
+	for (let x = A.x; x >= min.x && x <= max.x; x += step) {
+		const y = A.y + slope * (x - A.x);
+		if (y < min.y || y > max.y) break;
+		points.push({ x, y });
+	}
 
-		for (let x = A.x; x >= xMin && x <= xMax; x += step) {
-			const y = A.y + slope * (x - A.x);
-			if (y < yMin || y > yMax) break;
-			points.push({ x, y });
-		}
-
-		for (let x = A.x - step; x >= xMin && x <= xMax; x -= step) {
-			const y = A.y + slope * (x - A.x);
-			if (y < yMin || y > yMax) break;
-			points.unshift({ x, y });
-		}
+	for (let x = A.x - step; x >= min.x && x <= max.x; x -= step) {
+		const y = A.y + slope * (x - A.x);
+		if (y < min.y || y > max.y) break;
+		points.unshift({ x, y });
 	}
 
 	return points;
 }
-function findAntiNodes(
-	{ grid, antennas, occupied }: Grid,
-	distance: boolean = false
-) {
+function isValidDistance(toTest: Point, a: Point, b: Point): boolean {
+	const distToA: number = TOOLS.manhattanDistance(toTest, a);
+	const distToB: number = TOOLS.manhattanDistance(toTest, b);
+
+	return (
+		Math.abs(distToA / distToB) === 0.5 || Math.abs(distToB / distToA) === 0.5
+	);
+}
+function countAntiNodes(
+	{ grid, antennas }: Grid,
+	validateDistance: boolean = false
+): number {
 	const [maxX, maxY] = [grid[0].length, grid.length];
-	const antiNodes: Point[] = [];
+	const antiNodes: Set<string> = new Set();
 
 	for (const [_, coordinates] of antennas) {
 		const points: Point[] = [...coordinates].map(coordToPoint);
@@ -107,39 +100,25 @@ function findAntiNodes(
 			for (let b = a + 1; b < points.length; b++) {
 				const pointB: Point = points[b];
 
-				const possiblePoints = generateLineWithinLimits(
-					pointA,
-					pointB,
-					0,
-					maxX,
-					0,
-					maxY
-				);
+				const potentialPoints = extrapolatePoints(pointA, pointB, {
+					x: maxX,
+					y: maxY,
+				});
 
-				for (const point of possiblePoints) {
-					if (occupied.has(coordToString(point.x, point.y))) {
-						continue;
-					}
+				for (const point of potentialPoints) {
+					const currentPoint = coordToString(point.x, point.y);
 
-					if (distance) {
-						const distToA: number = TOOLS.manhattanDistance(point, pointA);
-						const distToB: number = TOOLS.manhattanDistance(point, pointB);
-
-						if (
-							Math.abs(distToA / distToB) === 0.5 ||
-							Math.abs(distToB / distToA) === 0.5
-						) {
-							antiNodes.push(point);
+					if (grid[point.y] && grid[point.y][point.x]) {
+						if (validateDistance && isValidDistance(point, pointA, pointB)) {
+							antiNodes.add(currentPoint);
+						} else if (!validateDistance) {
+							antiNodes.add(currentPoint);
 						}
-					} else {
-						antiNodes.push(point);
 					}
 				}
 			}
 		}
 	}
 
-	console.log(antiNodes);
-
-	return antiNodes;
+	return antiNodes.size;
 }
