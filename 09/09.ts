@@ -4,13 +4,12 @@ import TOOLS from "tools";
 //Solutions
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	const sequence: Sequence = parseInput(data);
-	return calculateChecksum(shiftBits(sequence));
+	return calculateChecksum(parseInputAsBits(data));
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	const sequence: Sequence = parseInput(data);
-	return calculateChecksum(shiftBlocks(sequence));
+	const blocks: Block[] = parseInputAsBlocks(data);
+	return calculateChecksum(shiftBlocks(blocks));
 }
 
 type BitSequence = (string | number)[];
@@ -21,42 +20,53 @@ interface Block {
 	size: number;
 }
 
-interface Sequence {
-	bits: BitSequence;
-	blocks: Block[];
-}
-
 // Functions
-function parseInput(data: string) {
-	let bits: BitSequence = [];
+function parseInputAsBits(data: string): BitSequence {
+	const counts = [...data].map(Number);
+	const len = counts.length;
+	const bits: BitSequence = [];
+	const id = { i: 0, j: ~~(len / 2) };
+
+	for (let i = 0, j = len - 1; i <= j; i++) {
+		const n = counts[i];
+
+		if (i % 2 === 0) {
+			bits.push(...Array(n).fill(id.i++));
+		} else {
+			const block = [];
+
+			while (block.length < n) {
+				if (counts[j] > 0) {
+					block.push(id.j);
+					counts[j]--;
+				} else {
+					id.j--;
+					j -= 2;
+				}
+			}
+			bits.push(...block);
+		}
+	}
+
+	return bits;
+}
+function parseInputAsBlocks(data: string): Block[] {
 	const blocks: Block[] = [];
 
 	for (let i = 0, id = 0; i < data.length; i++) {
 		const n: number = Number(data[i]);
 
 		if (i > 0 && i % 2 !== 0) {
-			bits = bits.concat(Array(n).fill("."));
 			blocks.push({ isData: false, id: -1, size: n });
 		} else {
-			bits = bits.concat(Array(n).fill(id));
 			blocks.push({ isData: true, id, size: n });
 			id++;
 		}
 	}
 
-	return { bits, blocks };
+	return blocks;
 }
-function shiftBits({ bits }: Sequence): BitSequence {
-	for (let i = 0, j = bits.length - 1; i < j; i++) {
-		if (bits[i] === ".") {
-			while (bits[j] === ".") j--;
-			[bits[i], bits[j]] = [bits[j], bits[i]];
-		}
-	}
-
-	return bits;
-}
-function shiftBlocks({ blocks }: Sequence): BitSequence {
+function shiftBlocks(blocks: Block[]): BitSequence {
 	const sequence = structuredClone(blocks);
 	const output: BitSequence = [];
 
