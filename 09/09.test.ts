@@ -11,18 +11,18 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 			expect(solveA("example_a", currentDay)).toBe(1928);
 		});
 
-		it.skip("Solution", () => {
+		it("Solution", () => {
 			expect(solveA("input", currentDay)).toBe(6430446922192);
 		});
 	});
 
-	describe.ignore("Part B", () => {
+	describe("Part B", () => {
 		it("Example", () => {
 			expect(solveB("example_b", currentDay)).toBe(2858);
 		});
 
-		it.ignore("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(0);
+		it("Solution", () => {
+			expect(solveB("input", currentDay)).toBe(6460170593016);
 		});
 	});
 });

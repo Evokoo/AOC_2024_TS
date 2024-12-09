@@ -5,57 +5,107 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const sequence: Sequence = parseInput(data);
-	return calculateChecksum(shiftData(sequence));
+	return calculateChecksum(shiftBits(sequence));
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	return 0;
+	const sequence: Sequence = parseInput(data);
+	return calculateChecksum(shiftBlocks(sequence));
 }
 
-type DataSequence = (string | number)[];
+type BitSequence = (string | number)[];
+
+interface Block {
+	id: number;
+	isData: boolean;
+	size: number;
+}
 
 interface Sequence {
-	forward: DataSequence;
-	reverse: DataSequence;
+	bits: BitSequence;
+	blocks: Block[];
 }
 
 // Functions
-function parseInput(data: string): Sequence {
-	let id = 0;
-	let forward: DataSequence = [];
-	let reverse: DataSequence = [];
+function parseInput(data: string) {
+	let bits: BitSequence = [];
+	const blocks: Block[] = [];
 
-	for (let i = 0; i < data.length; i++) {
+	for (let i = 0, id = 0; i < data.length; i++) {
 		const n: number = Number(data[i]);
 
 		if (i > 0 && i % 2 !== 0) {
-			forward = [...forward, ...Array(n).fill(".")];
+			bits = bits.concat(Array(n).fill("."));
+			blocks.push({ isData: false, id: -1, size: n });
 		} else {
-			forward = [...forward, ...Array(n).fill(id)];
-			reverse = [...Array(n).fill(id), ...reverse];
+			bits = bits.concat(Array(n).fill(id));
+			blocks.push({ isData: true, id, size: n });
 			id++;
 		}
 	}
 
-	return { forward, reverse };
+	return { bits, blocks };
 }
-function shiftData({ forward, reverse }: Sequence): DataSequence {
-	let removed = 0;
-
-	for (let i = 0; i < forward.length; i++) {
-		if (forward[i] === ".") {
-			forward[i] = reverse.shift()!;
-			removed++;
+function shiftBits({ bits }: Sequence): BitSequence {
+	for (let i = 0, j = bits.length - 1; i < j; i++) {
+		if (bits[i] === ".") {
+			while (bits[j] === ".") j--;
+			[bits[i], bits[j]] = [bits[j], bits[i]];
 		}
 	}
 
-	return forward.slice(0, -removed);
+	return bits;
 }
-function calculateChecksum(sequence: DataSequence): number {
+function shiftBlocks({ blocks }: Sequence): BitSequence {
+	const sequence = structuredClone(blocks);
+	const output: BitSequence = [];
+
+	while (sequence.length) {
+		const current = sequence[0];
+
+		if (current.isData) {
+			for (let i = 0; i < current.size; i++) {
+				output.push(current.id);
+			}
+		} else {
+			let replacement;
+
+			for (let i = sequence.length - 1; i > 0; i--) {
+				const next = sequence[i];
+
+				if (next.isData && next.size <= current.size) {
+					replacement = next;
+					sequence[i] = { isData: false, id: -1, size: next.size };
+					break;
+				}
+			}
+
+			if (replacement) {
+				for (let i = 0; i < replacement.size; i++) {
+					output.push(replacement.id);
+				}
+
+				if (replacement.size < current.size) {
+					sequence[0].size -= replacement.size;
+					continue;
+				}
+			} else {
+				for (let i = 0; i < current.size; i++) {
+					output.push(".");
+				}
+			}
+		}
+		sequence.shift();
+	}
+
+	return output;
+}
+function calculateChecksum(sequence: BitSequence): number {
 	let checksum = 0;
 
 	for (let i = 0; i < sequence.length; i++) {
-		checksum += i * +sequence[i];
+		if (sequence[i] === ".") continue;
+		checksum += i * Number(sequence[i]);
 	}
 
 	return checksum;
