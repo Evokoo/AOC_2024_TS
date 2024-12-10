@@ -5,11 +5,12 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const grid: Grid = parseInput(data);
-	return findTrailHeads(grid);
+	return assessTrail(grid);
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	return 0;
+	const grid: Grid = parseInput(data);
+	return assessTrail(grid, true);
 }
 
 type Path = { x: number; y: number; elevation: number };
@@ -19,36 +20,44 @@ type Grid = number[][];
 function parseInput(data: string): Grid {
 	return data.split("\n").map((row) => [...row].map(Number));
 }
-function findTrailHeads(grid: Grid): number {
-	let trailHeadCount = 0;
+function assessTrail(grid: Grid, unique: boolean = false): number {
+	let result: number = 0;
 
 	for (let y = 0; y < grid.length; y++) {
 		for (let x = 0; x < grid[0].length; x++) {
 			if (grid[y][x] === 0) {
-				trailHeadCount += traverseGrid(x, y, grid);
+				result += traverseGrid(x, y, grid, unique);
 			}
 		}
 	}
-
-	return trailHeadCount;
+	return result;
 }
-function traverseGrid(x: number, y: number, grid: Grid): number {
+//DFS
+function traverseGrid(
+	x: number,
+	y: number,
+	grid: Grid,
+	unqiue: boolean
+): number {
 	const queue: Path[] = [{ x, y, elevation: 0 }];
 	const seen: Set<string> = new Set();
-	let trailHeadCount = 0;
+	let result = 0;
 
 	while (queue.length) {
 		const current = queue.pop()!;
-		const coord = `${current.x},${current.y}`;
 
-		if (seen.has(coord)) {
-			continue;
-		} else {
-			seen.add(coord);
+		if (!unqiue) {
+			const coord = `${current.x},${current.y}`;
+
+			if (seen.has(coord)) {
+				continue;
+			} else {
+				seen.add(coord);
+			}
 		}
 
 		if (current.elevation === 9) {
-			trailHeadCount++;
+			result++;
 			continue;
 		} else {
 			for (const [dx, dy] of [
@@ -70,5 +79,5 @@ function traverseGrid(x: number, y: number, grid: Grid): number {
 		}
 	}
 
-	return trailHeadCount;
+	return result;
 }
