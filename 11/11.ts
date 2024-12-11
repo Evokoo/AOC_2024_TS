@@ -33,9 +33,10 @@ function observeStones(stones: number[], blinks: number): number {
 	let stoneMap: Map<number, number> = new Map(
 		stones.map((stone) => [stone, 1])
 	);
-	let tempMap: Map<number, number> = new Map();
 
 	for (let i = 0; i < blinks; i++) {
+		const tempMap: Map<number, number> = new Map();
+
 		for (const [stone, count] of [...stoneMap]) {
 			if (stone === 0) {
 				tempMap.set(1, (tempMap.get(1) ?? 0) + count);
@@ -48,9 +49,7 @@ function observeStones(stones: number[], blinks: number): number {
 				tempMap.set(value, (tempMap.get(value) ?? 0) + count);
 			}
 		}
-
 		stoneMap = tempMap;
-		tempMap = new Map();
 	}
 
 	let totalStones = 0;
