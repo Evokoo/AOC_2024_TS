@@ -100,7 +100,6 @@ function sideCount(plot: Plot): number {
 
 	let sides = 0;
 
-	//Horiztonal
 	for (let y = min.y; y <= max.y; y++) {
 		for (let x = min.x; x <= max.x; x++) {
 			const coord = `${x},${y}`;
@@ -134,22 +133,22 @@ function sideCount(plot: Plot): number {
 					}
 				}
 
-				//Top Right Corner
+				//Outer top left
 				if (!isShape.N && !isShape.W) sides++;
-				//Top Left Corner
+				//Outer top right
 				if (!isShape.N && !isShape.E) sides++;
-				//Bottom Right Corner
+				//Outer bottom left
 				if (!isShape.S && !isShape.W) sides++;
-				//Bottom Left Corner
+				//Outer bottom right
 				if (!isShape.S && !isShape.E) sides++;
 
-				//Inner Top Left
+				//Inner top left
 				if (isShape.E && isShape.S && !isShape.SE) sides++;
-				//Inner Top Right
+				//Inner top right
 				if (isShape.W && isShape.S && !isShape.SW) sides++;
-				//Inner Bottom Left
+				//Inner bottom left
 				if (isShape.N && isShape.E && !isShape.NE) sides++;
-				//Inner Bottom Right
+				//Inner bottom right
 				if (isShape.N && isShape.W && !isShape.NW) sides++;
 			}
 		}
