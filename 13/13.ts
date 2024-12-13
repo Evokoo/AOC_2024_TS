@@ -9,7 +9,8 @@ export function solveA(fileName: string, day: string): number {
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	return 0;
+	const clawGames: ClawGame[] = parseInput(data);
+	return playClawGames(clawGames, true);
 }
 
 type Point = { x: number; y: number };
@@ -41,29 +42,46 @@ function parseInput(data: string): ClawGame[] {
 
 	return clawGames;
 }
-function playClawGames(games: ClawGame[]): number {
+function playClawGames(games: ClawGame[], extend: boolean = false): number {
 	let tokens = 0;
 
-	for (let { target, aButton, bButton } of games) {
-		// if (target.x % TOOLS.gcd(aButton.x, bButton.x) !== 0) continue;
-		// if (target.y % TOOLS.gcd(aButton.y, bButton.y) !== 0) continue;
-
-		const position: Point = { x: 0, y: 0 };
-
-		for (let a = 0; a < 100; a++) {
-			position.x = aButton.x * a;
-			position.y = aButton.y * a;
-
-			for (let b = 0; b < 100; b++) {
-				if (position.x === target.x && position.y === target.y) {
-					tokens += a * 3 + b;
-				}
-
-				position.x += bButton.x;
-				position.y += bButton.y;
-			}
+	for (const { aButton: a, bButton: b, target: t } of games) {
+		if (extend) {
+			t.x += 10000000000000;
+			t.y += 10000000000000;
 		}
+
+		const [nA, nB] = countButtonPresses(a, b, t);
+
+		tokens += nA * 3 + nB;
 	}
 
 	return tokens;
+}
+function countButtonPresses(
+	A: Point,
+	B: Point,
+	target: Point
+): [number, number] {
+	const { x: xA, y: yA } = A;
+	const { x: xB, y: yB } = B;
+	const { x: xT, y: yT } = target;
+
+	const det = xA * yB - yA * xB;
+
+	if (det === 0) {
+		throw Error("No unique solution exists");
+	}
+
+	const detA = xT * yB - yT * xB;
+	const detB = xA * yT - yA * xT;
+
+	const a = detA / det;
+	const b = detB / det;
+
+	if (Number.isInteger(a) && Number.isInteger(b)) {
+		return [a, b];
+	} else {
+		return [0, 0];
+	}
 }
