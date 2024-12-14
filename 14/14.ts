@@ -5,14 +5,12 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string, gridSize: Point): number {
 	const data = TOOLS.readData(fileName, day);
 	const robots: Robot[] = parseInput(data);
-	const safetyFactor: number = simulateRobots(robots, 101, gridSize);
-	return safetyFactor;
+	return simulateRobots(robots, 100, gridSize);
 }
 export function solveB(fileName: string, day: string, gridSize: Point): number {
 	const data = TOOLS.readData(fileName, day);
 	const robots: Robot[] = parseInput(data);
-	simulateRobots(robots, 101, gridSize);
-	return -1;
+	return simulateRobots(robots, 10_000, gridSize);
 }
 
 type Point = { x: number; y: number };
@@ -32,7 +30,6 @@ function parseInput(data: string): Robot[] {
 
 	return robots;
 }
-
 function simulateRobots(
 	robots: Robot[],
 	time: number,
@@ -41,8 +38,8 @@ function simulateRobots(
 	for (let second = 0; second < time; second++) {
 		robots = robots.map((robot) => updateRobot(robot, gridSize));
 
-		if (time !== 100) {
-			printFormation(robots, gridSize, second);
+		if (time > 100 && highDensity(robots, gridSize)) {
+			return second + 1;
 		}
 	}
 	return getSafetyFactor(robots, gridSize);
@@ -82,21 +79,30 @@ function getSafetyFactor(robots: Robot[], gridSize: Point): number {
 
 	return quadrants.reduce((acc, cur) => acc * cur, 1);
 }
-function printFormation(
-	robots: Robot[],
-	gridSize: Point,
-	second: number
-): void {
-	const grid: string[][] = Array.from({ length: gridSize.y }, () =>
-		Array.from({ length: gridSize.x }, () => ".")
-	);
+function highDensity(robots: Robot[], gridSize: Point): boolean {
+	const quadrants: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	const [xOneThird, xTwoThird] = [gridSize.x * 0.33, gridSize.x * 0.66];
+	const [yOneThird, yTwoThird] = [gridSize.y * 0.33, gridSize.y * 0.66];
 
 	for (const { pos } of robots) {
-		grid[pos.y][pos.x] = "*";
+		if (pos.x < xOneThird) {
+			if (pos.y < yOneThird) quadrants[0]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[1]++;
+			if (pos.y > yTwoThird) quadrants[2]++;
+		}
+
+		if (pos.x > xOneThird && pos.x < xTwoThird) {
+			if (pos.y < yOneThird) quadrants[3]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[4]++;
+			if (pos.y > yTwoThird) quadrants[5]++;
+		}
+
+		if (pos.x > xTwoThird) {
+			if (pos.y < yOneThird) quadrants[6]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[7]++;
+			if (pos.y > yTwoThird) quadrants[8]++;
+		}
 	}
 
-	const image: string = grid.map((row) => row.join("")).join("\n");
-
-	console.log({ second, image });
-	debugger;
+	return quadrants.some((q) => q > 200);
 }
