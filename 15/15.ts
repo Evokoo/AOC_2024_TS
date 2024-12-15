@@ -9,11 +9,12 @@ export function solveA(fileName: string, day: string): number {
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	return 0;
+	const warehouse: Warehouse = parseInput(data, true);
+	return simulateRobot(warehouse, true);
 }
 
 type Point = { x: number; y: number };
-type Box = Point & { id: number };
+type Box = { id: number; xA: number; xB: number; y: number };
 
 interface Warehouse {
 	robot: Point;
@@ -23,7 +24,7 @@ interface Warehouse {
 }
 
 // Functions
-function parseInput(data: string): Warehouse {
+function parseInput(data: string, doubleWidth: boolean = false): Warehouse {
 	const inputSections = data.split("\n\n");
 	const grid: string[] = inputSections[0].split("\n");
 	const path: string[] = inputSections[1].match(/./g) || [];
@@ -33,13 +34,19 @@ function parseInput(data: string): Warehouse {
 	const walls: Map<number, Set<number>> = new Map();
 
 	for (let y = 0; y < grid.length; y++) {
-		for (let x = 0; x < grid[0].length; x++) {
-			switch (grid[y][x]) {
+		const row = doubleWidth ? extendRow(grid[y]) : grid[y];
+		for (let x = 0; x < row.length; x++) {
+			switch (row[x]) {
 				case "#":
 					walls.set(y, new Set([...(walls.get(y) ?? new Set()), x]));
 					break;
 				case "O":
-					boxes.push({ id: boxes.length, x, y });
+					boxes.push({
+						id: boxes.length,
+						xA: x,
+						xB: doubleWidth ? x + 1 : x,
+						y,
+					});
 					break;
 				case "@":
 					robot.x = x;
@@ -51,65 +58,110 @@ function parseInput(data: string): Warehouse {
 
 	return { robot, boxes, walls, path };
 }
-function simulateRobot({ robot, boxes, walls, path }: Warehouse): number {
+function extendRow(row: string): string {
+	return row.replace(/./g, (char) => {
+		switch (char) {
+			case ".":
+				return "..";
+			case "#":
+				return "##";
+			case "@":
+				return "@.";
+			case "O":
+				return "O.";
+			default:
+				return char;
+		}
+	});
+}
+function simulateRobot(
+	{ robot, boxes, walls, path }: Warehouse,
+	doubleWidth: boolean = false
+): number {
 	for (const direction of path) {
-		const boxesToMove: number[] = [];
-		let [x, y, validMove, steps] = [robot.x, robot.y, true, 1];
+		const boxesToMove: Set<number> = new Set();
+		let xRange: number[] = [robot.x];
+		let y: number = robot.y;
+		let validMove = true;
 
+		//Horizontal Movement
 		if (direction === "<" || direction === ">") {
-			while (validMove) {
-				const nextX = direction === "<" ? x - steps : x + steps;
-				const box = boxes.find((box) => box.x === nextX && box.y === y);
-				const isWall = (walls.get(y) ?? new Set()).has(nextX);
+			const wallLocations = walls.get(y) ?? new Set();
 
-				if (box) {
-					boxesToMove.push(box.id);
-				} else if (isWall) {
+			while (validMove) {
+				const nextX = direction === "<" ? xRange[0] - 1 : xRange[0] + 1;
+				const adjacentWall = wallLocations.has(nextX);
+				const adjacentBox = boxes.find(
+					(box) => (box.xA === nextX || box.xB === nextX) && box.y === y
+				);
+
+				if (adjacentWall) {
 					validMove = false;
 					break;
-				} else if (!box && !isWall) {
+				} else if (adjacentBox) {
+					boxesToMove.add(adjacentBox.id);
+
+					if (doubleWidth) {
+						xRange = [direction === "<" ? adjacentBox.xA : adjacentBox.xB];
+					} else {
+						xRange = [adjacentBox.xA];
+					}
+				} else {
 					break;
 				}
-
-				steps++;
 			}
 		}
 
+		//Vertical Movement
 		if (direction === "v" || direction === "^") {
 			while (validMove) {
-				const nextY = direction === "v" ? y + steps : y - steps;
-				const box = boxes.find((box) => box.x === x && box.y === nextY);
-				const isWall = (walls.get(nextY) ?? new Set()).has(x);
+				const nextY = direction === "v" ? y + 1 : y - 1;
+				const wallLocations = walls.get(nextY) ?? new Set();
 
-				if (box) {
-					boxesToMove.push(box.id);
-				} else if (isWall) {
-					validMove = false;
-					break;
-				} else if (!box && !isWall) {
+				for (const x of xRange) {
+					if (wallLocations.has(x)) {
+						validMove = false;
+						break;
+					}
+				}
+				const adjacentBoxes = boxes.filter(
+					(box) =>
+						(xRange.includes(box.xA) || xRange.includes(box.xB)) &&
+						box.y === nextY
+				);
+
+				if (adjacentBoxes.length) {
+					const newXRange = [];
+
+					for (const box of adjacentBoxes) {
+						boxesToMove.add(box.id);
+						newXRange.push(box.xA, box.xB);
+					}
+
+					xRange = newXRange;
+					y = nextY;
+				} else {
 					break;
 				}
-
-				steps++;
 			}
 		}
 
 		if (validMove) {
-			for (const id of boxesToMove) {
+			for (const id of [...boxesToMove]) {
 				const box = boxes[id];
 
 				switch (direction) {
 					case ">":
-						boxes[id] = { id: box.id, x: box.x + 1, y: box.y };
+						boxes[id] = { ...box, xA: box.xA + 1, xB: box.xB + 1 };
 						break;
 					case "<":
-						boxes[id] = { id: box.id, x: box.x - 1, y: box.y };
+						boxes[id] = { ...box, xA: box.xA - 1, xB: box.xB - 1 };
 						break;
 					case "^":
-						boxes[id] = { id: box.id, x: box.x, y: box.y - 1 };
+						boxes[id] = { ...box, y: box.y - 1 };
 						break;
 					case "v":
-						boxes[id] = { id: box.id, x: box.x, y: box.y + 1 };
+						boxes[id] = { ...box, y: box.y + 1 };
 						break;
 				}
 			}
@@ -131,37 +183,9 @@ function simulateRobot({ robot, boxes, walls, path }: Warehouse): number {
 		}
 	}
 
-	return calculateGPSScore(boxes);
+	return calculateBoxScore(boxes);
 }
 
-function calculateGPSScore(boxes: Box[]): number {
-	let total = 0;
-
-	for (const { x, y } of boxes) {
-		total += y * 100 + x;
-	}
-
-	return total;
-}
-
-function printGrid({ robot, boxes, walls }: Warehouse, gridSize: number): void {
-	const grid = Array.from({ length: gridSize }, () =>
-		Array.from({ length: gridSize }, () => ".")
-	);
-
-	grid[robot.y][robot.x] = "@";
-
-	for (const { x, y } of boxes) {
-		grid[y][x] = "O";
-	}
-
-	for (const [y, xSet] of [...walls]) {
-		for (const x of [...xSet]) {
-			grid[y][x] = "#";
-		}
-	}
-
-	const strGrid = grid.map((row) => row.join("")).join("\n");
-
-	console.log(strGrid);
+function calculateBoxScore(boxes: Box[]): number {
+	return boxes.reduce((score, { xA, y }) => score + (y * 100 + xA), 0);
 }
