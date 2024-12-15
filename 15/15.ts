@@ -56,9 +56,9 @@ function simulateRobot({ robot, boxes, walls, path }: Warehouse): number {
 		const boxesToMove: number[] = [];
 		let [x, y, validMove, steps] = [robot.x, robot.y, true, 1];
 
-		if (direction === ">") {
+		if (direction === "<" || direction === ">") {
 			while (validMove) {
-				const nextX = x + steps;
+				const nextX = direction === "<" ? x - steps : x + steps;
 				const box = boxes.find((box) => box.x === nextX && box.y === y);
 				const isWall = (walls.get(y) ?? new Set()).has(nextX);
 
@@ -73,48 +73,11 @@ function simulateRobot({ robot, boxes, walls, path }: Warehouse): number {
 
 				steps++;
 			}
-
-			if (validMove) {
-				for (const id of boxesToMove) {
-					const box = boxes[id];
-					boxes[id] = { id: box.id, x: box.x + 1, y: box.y };
-				}
-
-				robot.x += 1;
-			}
 		}
 
-		if (direction === "<") {
+		if (direction === "v" || direction === "^") {
 			while (validMove) {
-				const nextX = x - steps;
-				const box = boxes.find((box) => box.x === nextX && box.y === y);
-				const isWall = (walls.get(y) ?? new Set()).has(nextX);
-
-				if (box) {
-					boxesToMove.push(box.id);
-				} else if (isWall) {
-					validMove = false;
-					break;
-				} else if (!box && !isWall) {
-					break;
-				}
-
-				steps++;
-			}
-
-			if (validMove) {
-				for (const id of boxesToMove) {
-					const box = boxes[id];
-					boxes[id] = { id: box.id, x: box.x - 1, y: box.y };
-				}
-
-				robot.x -= 1;
-			}
-		}
-
-		if (direction === "^") {
-			while (validMove) {
-				const nextY = y - steps;
+				const nextY = direction === "v" ? y + steps : y - steps;
 				const box = boxes.find((box) => box.x === x && box.y === nextY);
 				const isWall = (walls.get(nextY) ?? new Set()).has(x);
 
@@ -129,47 +92,44 @@ function simulateRobot({ robot, boxes, walls, path }: Warehouse): number {
 
 				steps++;
 			}
-
-			if (validMove) {
-				for (const id of boxesToMove) {
-					const box = boxes[id];
-					boxes[id] = { id: box.id, x: box.x, y: box.y - 1 };
-				}
-
-				robot.y -= 1;
-			}
 		}
 
-		if (direction === "v") {
-			while (validMove) {
-				const nextY = y + steps;
-				const box = boxes.find((box) => box.x === x && box.y === nextY);
-				const isWall = (walls.get(nextY) ?? new Set()).has(x);
+		if (validMove) {
+			for (const id of boxesToMove) {
+				const box = boxes[id];
 
-				if (box) {
-					boxesToMove.push(box.id);
-				} else if (isWall) {
-					validMove = false;
-					break;
-				} else if (!box && !isWall) {
-					break;
+				switch (direction) {
+					case ">":
+						boxes[id] = { id: box.id, x: box.x + 1, y: box.y };
+						break;
+					case "<":
+						boxes[id] = { id: box.id, x: box.x - 1, y: box.y };
+						break;
+					case "^":
+						boxes[id] = { id: box.id, x: box.x, y: box.y - 1 };
+						break;
+					case "v":
+						boxes[id] = { id: box.id, x: box.x, y: box.y + 1 };
+						break;
 				}
-
-				steps++;
 			}
 
-			if (validMove) {
-				for (const id of boxesToMove) {
-					const box = boxes[id];
-					boxes[id] = { id: box.id, x: box.x, y: box.y + 1 };
-				}
-
-				robot.y += 1;
+			switch (direction) {
+				case ">":
+					robot.x += 1;
+					break;
+				case "<":
+					robot.x -= 1;
+					break;
+				case "^":
+					robot.y -= 1;
+					break;
+				case "v":
+					robot.y += 1;
+					break;
 			}
 		}
 	}
-
-	// printGrid({ robot, boxes, walls, path }, 20);
 
 	return calculateGPSScore(boxes);
 }
