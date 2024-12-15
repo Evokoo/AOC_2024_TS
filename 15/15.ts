@@ -35,10 +35,12 @@ function parseInput(data: string, doubleWidth: boolean = false): Warehouse {
 
 	for (let y = 0; y < grid.length; y++) {
 		const row = doubleWidth ? extendRow(grid[y]) : grid[y];
+		const rowWalls: Set<number> = new Set();
+
 		for (let x = 0; x < row.length; x++) {
 			switch (row[x]) {
 				case "#":
-					walls.set(y, new Set([...(walls.get(y) ?? new Set()), x]));
+					rowWalls.add(x);
 					break;
 				case "O":
 					boxes.push({
@@ -54,6 +56,8 @@ function parseInput(data: string, doubleWidth: boolean = false): Warehouse {
 					break;
 			}
 		}
+
+		walls.set(y, rowWalls);
 	}
 
 	return { robot, boxes, walls, path };
@@ -73,6 +77,9 @@ function extendRow(row: string): string {
 				return char;
 		}
 	});
+}
+function calculateBoxScore(boxes: Box[]): number {
+	return boxes.reduce((score, { xA, y }) => score + (y * 100 + xA), 0);
 }
 function simulateRobot(
 	{ robot, boxes, walls, path }: Warehouse,
@@ -184,8 +191,4 @@ function simulateRobot(
 	}
 
 	return calculateBoxScore(boxes);
-}
-
-function calculateBoxScore(boxes: Box[]): number {
-	return boxes.reduce((score, { xA, y }) => score + (y * 100 + xA), 0);
 }
