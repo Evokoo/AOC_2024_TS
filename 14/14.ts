@@ -80,29 +80,29 @@ function getSafetyFactor(robots: Robot[], gridSize: Point): number {
 	return quadrants.reduce((acc, cur) => acc * cur, 1);
 }
 function highDensity(robots: Robot[], gridSize: Point): boolean {
-	const quadrants: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+	const zones: number[] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 	const [xOneThird, xTwoThird] = [gridSize.x * 0.33, gridSize.x * 0.66];
 	const [yOneThird, yTwoThird] = [gridSize.y * 0.33, gridSize.y * 0.66];
 
 	for (const { pos } of robots) {
 		if (pos.x < xOneThird) {
-			if (pos.y < yOneThird) quadrants[0]++;
-			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[1]++;
-			if (pos.y > yTwoThird) quadrants[2]++;
+			if (pos.y < yOneThird) zones[0]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) zones[1]++;
+			if (pos.y > yTwoThird) zones[2]++;
 		}
 
 		if (pos.x > xOneThird && pos.x < xTwoThird) {
-			if (pos.y < yOneThird) quadrants[3]++;
-			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[4]++;
-			if (pos.y > yTwoThird) quadrants[5]++;
+			if (pos.y < yOneThird) zones[3]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) zones[4]++;
+			if (pos.y > yTwoThird) zones[5]++;
 		}
 
 		if (pos.x > xTwoThird) {
-			if (pos.y < yOneThird) quadrants[6]++;
-			if (pos.y > yOneThird && pos.y < yTwoThird) quadrants[7]++;
-			if (pos.y > yTwoThird) quadrants[8]++;
+			if (pos.y < yOneThird) zones[6]++;
+			if (pos.y > yOneThird && pos.y < yTwoThird) zones[7]++;
+			if (pos.y > yTwoThird) zones[8]++;
 		}
 	}
 
-	return quadrants.some((q) => q > 200);
+	return zones.some((zone) => zone > 200);
 }
