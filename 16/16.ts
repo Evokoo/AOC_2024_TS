@@ -1,16 +1,17 @@
 // Imports
 import TOOLS from "tools";
+import { BinaryHeap } from "@std/data-structures";
 
 //Solutions
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const eventDetails: EventDetails = parseInput(data);
-	return navigateMaze(eventDetails);
+	return navigateMaze(eventDetails).score;
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const eventDetails: EventDetails = parseInput(data);
-	return navigateMaze(eventDetails);
+	return locateSeating(eventDetails);
 }
 
 type Point = { x: number; y: number };
@@ -22,15 +23,17 @@ type Reindeer = {
 	turns: number;
 	path: Set<string>;
 };
-
 type Maze = {
 	grid: string[][];
 	end: Point;
 };
-
 interface EventDetails {
 	reindeer: Reindeer;
 	maze: Maze;
+}
+interface OptimalRoute {
+	score: number;
+	route: Set<string>;
 }
 
 // Functions
@@ -73,17 +76,47 @@ function parseInput(data: string): EventDetails {
 	};
 }
 
-function navigateMaze({ reindeer, maze }: EventDetails) {
-	const queue: Reindeer[] = [reindeer];
+//
+function scoreRoute({ turns, steps }: Reindeer): number {
+	return turns * 1000 + steps;
+}
+function requiredTurns(entry: number, exit: number): number {
+	const clockwise = (exit - entry + 360) % 360;
+	const counterClockwise = (entry - exit + 360) % 360;
+	return Math.min(clockwise, counterClockwise) / 90;
+}
+function createPriorityQueue(state: Reindeer): BinaryHeap<Reindeer> {
+	const queue = new BinaryHeap<Reindeer>(
+		(a, b) => scoreRoute(a) - scoreRoute(b)
+	);
+	queue.push(state);
+
+	return queue;
+}
+//
+
+function navigateMaze(
+	{ reindeer, maze }: EventDetails,
+	targetScore?: number
+): OptimalRoute {
+	const queue: BinaryHeap<Reindeer> = createPriorityQueue(reindeer);
 	const seen: Set<string> = new Set();
-	const optimal: { score: number; seating: Set<string> } = {
+	const optimal: OptimalRoute = {
 		score: Infinity,
-		seating: new Set(),
+		route: new Set(),
 	};
 
 	while (queue.length) {
-		const { position, bearing, steps, turns, path } = queue.shift()!;
-		const currentState: string = `${position.x},${position.y}@${bearing}`;
+		const { position, bearing, steps, turns, path } = queue.pop()!;
+		const coord: string = `${position.x},${position.y}`;
+		const currentState: string = coord + `@${bearing}`;
+
+		if (
+			targetScore &&
+			scoreRoute({ position, bearing, steps, turns, path }) > targetScore
+		) {
+			break;
+		}
 
 		if (seen.has(currentState)) {
 			continue;
@@ -92,119 +125,88 @@ function navigateMaze({ reindeer, maze }: EventDetails) {
 		}
 
 		if (position.y === maze.end.y && position.x === maze.end.x) {
-			console.log(seen);
-			return scoreRoute({ position, bearing, steps, turns, path });
+			optimal.score = scoreRoute({ position, bearing, steps, turns, path });
+			optimal.route = path;
+
+			return optimal;
 		} else {
-			const north = maze.grid[position.y - 1][position.x];
-			const south = maze.grid[position.y + 1][position.x];
-			const east = maze.grid[position.y][position.x + 1];
-			const west = maze.grid[position.y][position.x - 1];
+			const neighbors = [
+				{ direction: "N", dx: 0, dy: -1, targetBearing: 0 },
+				{ direction: "S", dx: 0, dy: 1, targetBearing: 180 },
+				{ direction: "E", dx: 1, dy: 0, targetBearing: 90 },
+				{ direction: "W", dx: -1, dy: 0, targetBearing: 270 },
+			];
 
-			if (north !== "#") {
-				if (bearing === 0) {
-					queue.push({
-						position: { x: position.x, y: position.y - 1 },
-						bearing,
-						steps: steps + 1,
-						turns,
-						path: new Set([...path, `${position.x},${position.y}`]),
-					});
-				} else {
-					queue.push({
-						position,
-						bearing: 0,
-						steps,
-						turns: turns + requiredTurns(bearing, 0),
-						path,
-					});
-				}
-			}
+			for (const { dx, dy, targetBearing } of neighbors) {
+				const [nx, ny] = [position.x + dx, position.y + dy];
 
-			if (south !== "#") {
-				if (bearing === 180) {
-					queue.push({
-						position: { x: position.x, y: position.y + 1 },
-						bearing,
-						steps: steps + 1,
-						turns,
-						path: new Set([...path, `${position.x},${position.y}`]),
-					});
+				if (maze.grid[ny][nx] === "#") {
+					continue;
 				} else {
-					queue.push({
-						position,
-						bearing: 180,
-						steps,
-						turns: turns + requiredTurns(bearing, 180),
-						path,
-					});
-				}
-			}
+					const quarterTurns = requiredTurns(bearing, targetBearing);
+					const newPath = new Set(path);
 
-			if (east !== "#") {
-				if (bearing === 90) {
-					queue.push({
-						position: { x: position.x + 1, y: position.y },
-						bearing,
-						steps: steps + 1,
-						turns,
-						path: new Set([...path, `${position.x},${position.y}`]),
-					});
-				} else {
-					queue.push({
-						position,
-						bearing: 90,
-						steps,
-						turns: turns + requiredTurns(bearing, 90),
-						path,
-					});
-				}
-			}
+					newPath.add(coord);
+					newPath.add(`${nx},${ny}`);
 
-			if (west !== "#") {
-				if (bearing === 270) {
-					queue.push({
-						position: { x: position.x - 1, y: position.y },
-						bearing,
-						steps: steps + 1,
-						turns,
-						path: new Set([...path, `${position.x},${position.y}`]),
-					});
-				} else {
-					queue.push({
-						position,
-						bearing: 270,
-						steps,
-						turns: turns + requiredTurns(bearing, 270),
-						path,
-					});
+					if (quarterTurns <= 1) {
+						queue.push({
+							position: { x: nx, y: ny },
+							bearing: targetBearing,
+							steps: steps + 1,
+							turns: turns + quarterTurns,
+							path: newPath,
+						});
+					} else {
+						continue;
+					}
 				}
 			}
 		}
-
-		queue.sort((a, b) => scoreRoute(a) - scoreRoute(b));
 	}
 
-	return optimal.score;
+	return optimal;
+}
+function locateSeating({ reindeer, maze }: EventDetails): number {
+	const target: OptimalRoute = navigateMaze({ reindeer, maze });
+	const seating: Set<string> = target.route;
+
+	for (const point of [...target.route]) {
+		const [x, y] = point.split(",").map(Number);
+		const isFork = [
+			[-1, -1],
+			[1, 1],
+			[-1, 1],
+			[1, -1],
+		].some(([dx, dy]) => {
+			return maze.grid[y + dy][x + dx] === ".";
+		});
+
+		if (isFork) {
+			maze.grid[y][x] = "#";
+
+			const reRun = navigateMaze({ reindeer, maze }, target.score);
+
+			if (reRun.score !== Infinity) {
+				for (const reRunPoint of [...reRun.route]) {
+					seating.add(reRunPoint);
+				}
+			}
+
+			maze.grid[y][x] = ".";
+		}
+	}
+
+	return seating.size;
 }
 
-function scoreRoute({ turns, steps }: Reindeer): number {
-	return turns * 1000 + steps;
-}
-function requiredTurns(currentBearing: number, targetBearing: number): number {
-	return (
-		Math.min(
-			(targetBearing - currentBearing + 360) % 360,
-			(currentBearing - targetBearing + 360) % 360
-		) / 90
-	);
-}
-// function printMaze(grid: string[][], seating: string[]): void {
-// 	for (const seat of seating) {
-// 		const [x, y] = seat.split(",").map(Number);
-// 		grid[y][x] = "0";
-// 	}
+function printMaze(grid: string[][], seating: string[]): void {
+	for (const seat of seating) {
+		const [x, y] = seat.split(",").map(Number);
+		grid[y][x] = "+";
+	}
 
-// 	const str: string = grid.map((row) => row.join("")).join("\n");
+	const str: string = grid.map((row) => row.join("")).join("\n");
 
-// 	console.log(str);
-// }
+	console.log(str);
+}
