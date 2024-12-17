@@ -16,13 +16,13 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 		});
 	});
 
-	describe.skip("Part B", () => {
-		it("Example", () => {
-			expect(solveB("example_b", currentDay)).toBe(0);
+	describe("Part B", () => {
+		it.skip("Example", () => {
+			expect(solveB("example_b", currentDay)).toBe(117440);
 		});
 
-		it.skip("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(0);
+		it("Solution", () => {
+			expect(solveB("input", currentDay)).toBe(247839653009594n);
 		});
 	});
 });

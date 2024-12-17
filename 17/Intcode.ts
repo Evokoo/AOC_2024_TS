@@ -1,47 +1,57 @@
-export type Registers = { a: number; b: number; c: number };
+export type Registers = { a: bigint; b: bigint; c: bigint };
+export interface IntcodeSetup {
+	registers: Registers;
+	program: number[];
+}
+
+/**
+ * Intcode Computer Class
+ */
 
 export class Intcode {
-	private registerA: number;
-	private registerB: number;
-	private registerC: number;
-	private pointer: number;
+	private registerA: bigint;
+	private registerB: bigint;
+	private registerC: bigint;
+	private pointer: bigint;
 	private movePointer: boolean;
-	private output: number[];
+	private output: bigint[];
 
-	constructor(a: number, b: number, c: number) {
+	constructor(a: bigint, b: bigint, c: bigint) {
 		this.registerA = a;
 		this.registerB = b;
 		this.registerC = c;
-		this.pointer = 0;
+		this.pointer = 0n;
 		this.output = [];
 		this.movePointer = true;
 	}
 
 	public exercute(code: number, operand: number): void {
+		const literal: bigint = BigInt(operand);
+
 		switch (code) {
 			case 0:
-				this.adv(operand);
+				this.adv(literal);
 				break;
 			case 1:
-				this.bxl(operand);
+				this.bxl(literal);
 				break;
 			case 2:
-				this.bst(operand);
+				this.bst(literal);
 				break;
 			case 3:
-				this.jnz(operand);
+				this.jnz(literal);
 				break;
 			case 4:
-				this.bxc(operand);
+				this.bxc(literal);
 				break;
 			case 5:
-				this.out(operand);
+				this.out(literal);
 				break;
 			case 6:
-				this.bdv(operand);
+				this.bdv(literal);
 				break;
 			case 7:
-				this.cdv(operand);
+				this.cdv(literal);
 				break;
 		}
 
@@ -49,7 +59,7 @@ export class Intcode {
 	}
 
 	//Update Pointer
-	private updatePointer(increment: number = 2): void {
+	private updatePointer(increment: bigint = 2n): void {
 		if (this.movePointer) {
 			this.pointer += increment;
 		} else {
@@ -58,27 +68,29 @@ export class Intcode {
 	}
 
 	//Divsion
-	private dv(combo: number): number {
-		const numerator: number = this.registerA;
-		const denominator: number = Math.pow(2, combo);
-		const result: number = Number(Math.trunc(numerator / denominator));
+	private dv(combo: bigint): bigint {
+		const numerator: bigint = this.registerA;
+		const denominator: bigint = 2n ** combo;
+		const result: bigint = numerator / denominator;
 		return result;
 	}
 
 	//Get Combocode
-	private getComboCode(literal: number, combo: number = literal): number {
-		if (literal > 3) {
+	private getComboCode(literal: bigint): bigint {
+		let combo: bigint = literal;
+
+		if (literal > 3n) {
 			switch (literal) {
-				case 4:
+				case 4n:
 					combo = this.registerA;
 					break;
-				case 5:
+				case 5n:
 					combo = this.registerB;
 					break;
-				case 6:
+				case 6n:
 					combo = this.registerC;
 					break;
-				case 7:
+				case 7n:
 					throw Error("Reserved code");
 				default:
 					throw RangeError(`code: ${combo} not found`);
@@ -88,53 +100,53 @@ export class Intcode {
 	}
 
 	//Code 0
-	private adv(literal: number): void {
+	private adv(literal: bigint): void {
 		const combo = this.getComboCode(literal);
 		this.registerA = this.dv(combo);
 	}
 
 	//Code 1
-	private bxl(literal: number): void {
+	private bxl(literal: bigint): void {
 		const result = this.registerB ^ literal;
 		this.registerB = result;
 	}
 
 	//Code 2
-	private bst(literal: number): void {
+	private bst(literal: bigint): void {
 		const combo = this.getComboCode(literal);
-		const result: number = combo % 8;
+		const result = combo % 8n;
 		this.registerB = result;
 	}
 
 	//Code 3
-	private jnz(literal: number): void {
-		if (this.registerA !== 0) {
+	private jnz(literal: bigint): void {
+		if (this.registerA !== 0n) {
 			this.movePointer = false;
 			this.pointer = literal;
 		}
 	}
 
 	//Code 4
-	private bxc(_literal: number): void {
-		const result: number = this.registerB ^ this.registerC;
+	private bxc(_literal: bigint): void {
+		const result = this.registerB ^ this.registerC;
 		this.registerB = result;
 	}
 
 	//Code 5
-	private out(literal: number): void {
+	private out(literal: bigint): void {
 		const combo = this.getComboCode(literal);
-		const result: number = combo % 8;
+		const result = combo % 8n;
 		this.output.push(result);
 	}
 
 	//Code 6
-	private bdv(literal: number): void {
+	private bdv(literal: bigint): void {
 		const combo = this.getComboCode(literal);
 		this.registerB = this.dv(combo);
 	}
 
 	//Code 7
-	private cdv(literal: number): void {
+	private cdv(literal: bigint): void {
 		const combo = this.getComboCode(literal);
 		this.registerC = this.dv(combo);
 	}
@@ -143,11 +155,11 @@ export class Intcode {
 		return { a: this.registerA, b: this.registerB, c: this.registerC };
 	}
 
-	get printResult(): number[] {
+	get printResult(): bigint[] {
 		return this.output;
 	}
 
 	get pointerIndex(): number {
-		return this.pointer;
+		return Number(this.pointer);
 	}
 }
