@@ -1,6 +1,6 @@
 // Imports
-import TOOLS from "tools";
 import { BinaryHeap } from "@std/data-structures";
+import TOOLS from "tools";
 
 //Solutions
 export function solveA(
