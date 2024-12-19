@@ -1,5 +1,4 @@
 // Imports
-import { BinaryHeap } from "@std/data-structures";
 import TOOLS from "tools";
 
 //Solutions
