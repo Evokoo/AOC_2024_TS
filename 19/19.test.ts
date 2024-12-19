@@ -8,11 +8,11 @@ const currentDay = path.basename(Deno.cwd());
 describe(`AOC 2024 - Day ${currentDay}`, () => {
 	describe("Part A", () => {
 		it("Example", () => {
-			expect(solveA("example_a", currentDay)).toBe(0);
+			expect(solveA("example_a", currentDay)).toBe(6);
 		});
 
-		it.skip("Solution", () => {
-			expect(solveA("input", currentDay)).toBe(0);
+		it("Solution", () => {
+			expect(solveA("input", currentDay)).toBe(287);
 		});
 	});
 
