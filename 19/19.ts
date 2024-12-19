@@ -23,7 +23,7 @@ interface Towels {
 function parseInput(data: string): Towels {
 	const sections = data.split("\n\n");
 	return {
-		patterns: sections[0].match(/\w+/g) || [],
+		patterns: sections[0].split(", "),
 		designs: sections[1].split("\n"),
 	};
 }
