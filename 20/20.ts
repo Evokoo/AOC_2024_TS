@@ -10,7 +10,7 @@ export function solveA(fileName: string, day: string): number {
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const maze: Maze = parseInput(data);
-	return shortcuts(maze, 2) + shortcuts(maze, 20);
+	return shortcuts(maze, 20);
 }
 
 type Point = { x: number; y: number };
@@ -22,32 +22,24 @@ type Racer = {
 	time: number;
 };
 
-type RaceResult = {
-	path: Path;
-	time: number;
-};
-
 interface Maze {
 	start: Point;
 	end: Point;
 	walls: Set<string>;
-	size: Point;
-	grid: string[][];
 }
 
 // Functions
 function parseInput(data: string): Maze {
 	const grid: string[][] = data.split("\n").map((row) => [...row]);
+	const size: Point = { x: grid[0].length, y: grid.length };
 	const maze: Maze = {
 		start: { x: 0, y: 0 },
 		end: { x: 0, y: 0 },
 		walls: new Set(),
-		size: { x: grid[0].length, y: grid.length },
-		grid,
 	};
 
-	for (let y = 0; y < maze.size.y; y++) {
-		for (let x = 0; x < maze.size.x; x++) {
+	for (let y = 0; y < size.y; y++) {
+		for (let x = 0; x < size.x; x++) {
 			const tile = grid[y][x];
 
 			switch (tile) {
@@ -68,8 +60,7 @@ function parseInput(data: string): Maze {
 
 	return maze;
 }
-
-function navigateMaze({ start, end, walls }: Maze): RaceResult {
+function navigateMaze({ start, end, walls }: Maze): Path {
 	const queue: Racer[] = [{ x: start.x, y: start.y, time: 0 }];
 	const visited: Map<string, number> = new Map();
 
@@ -84,7 +75,7 @@ function navigateMaze({ start, end, walls }: Maze): RaceResult {
 		}
 
 		if (current.x === end.x && current.y === end.y) {
-			return { path: visited, time: current.time };
+			return visited;
 		} else {
 			for (const [dx, dy] of [
 				[0, 1],
@@ -105,31 +96,27 @@ function navigateMaze({ start, end, walls }: Maze): RaceResult {
 
 	throw Error("Route not found");
 }
-
-function shortcuts(maze: Maze, step: number): number {
-	const { path }: RaceResult = navigateMaze(maze);
+function shortcuts(maze: Maze, maxStep: number): number {
 	const timeSaves: Map<number, number> = new Map();
+	const path: Path = navigateMaze(maze);
 
-	let count = 0;
-
-	for (const [coord, time] of [...path]) {
+	const pathPoints: [Point, number][] = [...path].map(([coord, time]) => {
 		const [x, y] = coord.split(",").map(Number);
+		return [{ x, y }, time];
+	});
 
-		for (const [dx, dy] of [
-			[0, step],
-			[0, -step],
-			[step, 0],
-			[-step, 0],
-		]) {
-			const neighbor = `${x + dx},${y + dy}`;
+	for (let i = 0; i < pathPoints.length; i++) {
+		const [current, currentTime] = pathPoints[i];
 
-			if (path.has(neighbor)) {
-				const neighborTime = path.get(neighbor)!;
-				const timeSaved = neighborTime - time - step;
+		for (let j = i + 1; j < pathPoints.length; j++) {
+			const [neighbor, neighborTime] = pathPoints[j];
+			const distance = TOOLS.manhattanDistance(current, neighbor);
+
+			if (distance > 1 && distance <= maxStep) {
+				const timeSaved = neighborTime - (currentTime + distance);
 
 				if (timeSaved >= 100) {
 					timeSaves.set(timeSaved, (timeSaves.get(timeSaved) ?? 0) + 1);
-					count++;
 				}
 			}
 		}
@@ -137,22 +124,3 @@ function shortcuts(maze: Maze, step: number): number {
 
 	return [...timeSaves].reduce((acc, [_, count]) => acc + count, 0);
 }
-
-// function printMaze(maze: Maze): void {
-// 	const grid = Array.from({ length: maze.size.y }, () =>
-// 		Array.from({ length: maze.size.x }, () => ".")
-// 	);
-
-// 	grid[maze.start.y][maze.start.x] = "S";
-// 	grid[maze.end.y][maze.end.x] = "E";
-
-// 	for (const [y, xSet] of [...maze.walls]) {
-// 		for (const x of [...xSet]) {
-// 			grid[y][x] = "#";
-// 		}
-// 	}
-
-// 	const asString = grid.map((row) => row.join("")).join("\n");
-
-// 	console.log(asString + "\n");
-// }

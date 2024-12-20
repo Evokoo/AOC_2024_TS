@@ -6,8 +6,8 @@ import { solveA, solveB } from "./20.ts";
 const currentDay = path.basename(Deno.cwd());
 
 describe(`AOC 2024 - Day ${currentDay}`, () => {
-	describe.skip("Part A", () => {
-		it("Example", () => {
+	describe("Part A", () => {
+		it.skip("Example", () => {
 			expect(solveA("example_a", currentDay)).toBe(0);
 		});
 
@@ -22,7 +22,7 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 		});
 
 		it("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(0);
+			expect(solveB("input", currentDay)).toBe(1010263);
 		});
 	});
 });
