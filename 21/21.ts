@@ -91,7 +91,6 @@ function getPaths(start: string, end: string, keypad: Buttons): string[] {
 
 	throw Error("Paths not found");
 }
-
 function inputCodes(codes: string[]): number {
 	const branchMap: Map<string, string[]> = new Map();
 
@@ -104,14 +103,22 @@ function inputCodes(codes: string[]): number {
 		}));
 
 		const output: string[] = [];
+		let maxSize = Infinity;
 
 		while (queue.length) {
 			const { input, key, path, depth } = queue.pop()!;
 			const currentInput = input[0];
 
+			if (path.length > maxSize) {
+				continue;
+			}
+
 			if (input === "") {
 				if (depth === 0) {
-					output.push(path);
+					if (path.length < maxSize) {
+						output.push(path);
+						maxSize = path.length;
+					}
 				} else {
 					queue.push({
 						input: path,
@@ -158,109 +165,3 @@ function inputCodes(codes: string[]): number {
 
 	return complexityScore;
 }
-
-// function findOptimalPath(paths: string[]) {
-// 	const directionMap: Map<string, Map<string, string[]>> = new Map();
-
-// 	function DFS(path: string) {
-// 		const queue = [{ path, route: "", currentKey: "A" }];
-// 		const possiblePaths = [];
-
-// 		while (queue.length) {
-// 			const { path, route, currentKey } = queue.pop()!;
-
-// 			if (path === "") {
-// 				possiblePaths.push(route);
-// 			} else {
-// 				const input = path[0];
-// 				const branches =
-// 					directionMap.get(currentKey)?.get(input) ??
-// 					getPaths(currentKey, input, DPAD);
-
-// 				for (const branch of branches) {
-// 					queue.push({
-// 						path: path.slice(1),
-// 						route: route + branch,
-// 						currentKey: input,
-// 					});
-// 				}
-
-// 				if (
-// 					directionMap.has(currentKey) &&
-// 					directionMap.get(currentKey)!.has(input)
-// 				) {
-// 					continue;
-// 				} else {
-// 					directionMap.set(currentKey, new Map([[input, branches]]));
-// 				}
-// 			}
-// 		}
-
-// 		return possiblePaths;
-// 	}
-
-// 	let opitmalPath: string = "";
-
-// 	for (const path of paths) {
-// 		for (const result of DFS(path)) {
-// 			opitmalPath =
-// 				opitmalPath === "" || opitmalPath.length > result.length
-// 					? result
-// 					: opitmalPath;
-// 		}
-// 	}
-
-// 	return opitmalPath;
-// }
-
-// function inputCodes(codes: string[]) {
-// 	const keypads = [
-// 		{ id: 0, key: "A", path: "" },
-// 		{ id: 1, key: "A", path: "" },
-// 		{ id: 2, key: "A", path: "" },
-// 	];
-
-// 	let complexityScore = 0;
-
-// 	for (const code of codes.slice(2, 3)) {
-// 		for (const { id, key } of keypads) {
-// 			let currentKey = key;
-// 			let sequence = "";
-
-// 			if (id === 0) {
-// 				for (const input of code) {
-// 					const paths = getPaths(currentKey, input, NUMPAD).sort(
-// 						(a, b) => findOptimalPath([a]).length - findOptimalPath([b]).length
-// 					);
-
-// 					currentKey = input;
-// 					sequence += paths[0];
-// 				}
-// 			} else {
-// 				for (const input of keypads[id - 1].path) {
-// 					const paths = getPaths(currentKey, input, DPAD).sort(
-// 						(a, b) => findOptimalPath([a]).length - findOptimalPath([b]).length
-// 					);
-
-// 					currentKey = input;
-// 					sequence += paths[0];
-// 				}
-// 			}
-
-// 			keypads[id] = {
-// 				id,
-// 				key: currentKey,
-// 				path: sequence,
-// 			};
-// 		}
-
-// 		const codeValue = Number(code.slice(0, -1));
-// 		const inputLength = keypads[2].path.length;
-
-// 		console.log({ code, codeValue, inputLength });
-
-// 		complexityScore += codeValue * inputLength;
-// 	}
-
-// 	console.log(keypads, complexityScore);
-// }

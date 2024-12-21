@@ -18,7 +18,7 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 
 	describe.skip("Part B", () => {
 		it("Example", () => {
-			expect(solveB("example_b", currentDay)).toBe(0);
+			expect(solveB("example_b", currentDay)).toBe(154115708116294);
 		});
 
 		it.skip("Solution", () => {
