@@ -77,12 +77,14 @@ function generateSequence(n: number, interations: number): Map<string, number> {
 
 	for (let i = 0, secretNum = n, lastPrice = n % 10; i < interations; i++) {
 		secretNum = generateSecretNumber(secretNum);
-		const price = secretNum % 10;
-		const change = String(price - lastPrice);
 
-		secretNumbers.push({ secretNum, price: lastPrice, change });
+		secretNumbers.push({
+			secretNum,
+			price: lastPrice,
+			change: String((secretNum % 10) - lastPrice),
+		});
 
-		lastPrice = price;
+		lastPrice = secretNum % 10;
 	}
 
 	const sequences: Map<string, number> = new Map();
