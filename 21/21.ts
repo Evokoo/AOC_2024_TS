@@ -6,16 +6,13 @@ export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const codes: string[] = parseInput(data);
 	return inputCodes(codes);
-	// return inputCodes(codes);
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	return 0;
 }
 
-// type Point = { x: number; y: number };
 type Buttons = string[][];
-// type ButtonMap = Map<string, Map<string, string[]>>;
 type State = {
 	key: string;
 	x: number;
@@ -102,22 +99,24 @@ function inputCodes(codes: string[]): number {
 			depth: maxDepth,
 		}));
 
-		const output: string[] = [];
-		let maxSize = Infinity;
+		const output: { path: string; size: number } = {
+			path: "",
+			size: Infinity,
+		};
 
 		while (queue.length) {
 			const { input, key, path, depth } = queue.pop()!;
 			const currentInput = input[0];
 
-			if (path.length > maxSize) {
+			if (path.length > output.size) {
 				continue;
 			}
 
 			if (input === "") {
 				if (depth === 0) {
-					if (path.length < maxSize) {
-						output.push(path);
-						maxSize = path.length;
+					if (path.length < output.size) {
+						output.path = path;
+						output.size = path.length;
 					}
 				} else {
 					queue.push({
@@ -146,7 +145,7 @@ function inputCodes(codes: string[]): number {
 			branchMap.set(branchCode, branches);
 		}
 
-		return output.sort((a, b) => a.length - b.length)[0];
+		return output.path;
 	}
 
 	let complexityScore = 0;
