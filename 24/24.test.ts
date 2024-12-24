@@ -22,7 +22,9 @@ describe(`AOC 2024 - Day ${currentDay}`, () => {
 		});
 
 		it("Solution", () => {
-			expect(solveB("input", currentDay)).toBe(0);
+			expect(solveB("input", currentDay)).toBe(
+				"cgr,hpc,hwk,qmd,tnt,z06,z31,z37"
+			);
 		});
 	});
 });
