@@ -5,11 +5,14 @@ import TOOLS from "tools";
 export function solveA(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
 	const diagram: Diagram = parseInput(data);
-	return connectWires(diagram);
+	const wireConnections: Wires = connectWires(diagram);
+	return parseInt(getWireValue(wireConnections, "z"), 2);
 }
 export function solveB(fileName: string, day: string): number {
 	const data = TOOLS.readData(fileName, day);
-	return 0;
+	const diagram: Diagram = parseInput(data);
+	swapWires(diagram);
+	return -1;
 }
 
 type Wires = Map<string, number>;
@@ -19,7 +22,6 @@ type Instruction = {
 	inputB: string;
 	output: string;
 };
-
 interface Diagram {
 	wires: Wires;
 	instrctions: Instruction[];
@@ -50,7 +52,7 @@ function parseInput(data: string): Diagram {
 
 	return { wires, instrctions };
 }
-function connectWires({ wires, instrctions }: Diagram): number {
+function connectWires({ wires, instrctions }: Diagram): Wires {
 	while (instrctions.length) {
 		const { inputA, inputB, operator, output } = instrctions.shift()!;
 
@@ -76,17 +78,21 @@ function connectWires({ wires, instrctions }: Diagram): number {
 		}
 	}
 
-	const zValues: { id: string; value: number }[] = [];
+	return wires;
+}
+function getWireValue(wires: Wires, target: string): string {
+	const values: { id: string; value: number }[] = [];
 
 	for (const [id, value] of [...wires]) {
-		if (id.startsWith("z")) {
-			zValues.push({ id, value });
+		if (id.startsWith(target)) {
+			values.push({ id, value });
 		}
 	}
 
-	const binaryValue: string = zValues
+	const binaryValue: string = values
 		.sort((a, b) => b.id.localeCompare(a.id))
 		.reduce((acc, cur) => acc + String(cur.value), "");
 
-	return parseInt(binaryValue, 2);
+	return binaryValue;
 }
+function swapWires({ wires, instrctions }: Diagram) {}
